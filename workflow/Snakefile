@@ -1,0 +1,10 @@
+report: "report/workflow.rst"
+configfile: "config/config.yaml"
+
+rule sra_prefetch:
+    output:
+        temp('results/data/sra/{sample}/{sample}.sra')
+    container:
+        'docker://ncbi/sra-tools:3.0.1'
+    shell:
+        'prefetch {sample} -O results/data/sra/'
