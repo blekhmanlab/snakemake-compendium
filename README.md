@@ -10,5 +10,10 @@
 
 
 ```sh
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install snakemake
+
 snakemake --use-singularity --jobs 45 --slurm --default-resources slurm_account=blekhman slurm_partition=blekhman
 ```

@@ -12,13 +12,15 @@ rule all:
 
 rule sra_prefetch:
     retries: 3
+    input:
+        'SraAccList.txt'
     output:
         temp('{sample}/{sample}.sra')
     container:
         'docker://ncbi/sra-tools:3.0.1'
     threads: 1
     resources:
-        mem_mb=1000,
+        mem_mb=500,
         runtime=480
     shell:
         'prefetch {wildcards.sample}'
@@ -41,10 +43,11 @@ rule sra_to_fastq:
 rule filter_paired:
     input:
         expand('fastq/{sample}_1.fastq', sample=samples),
-        expand('fastq/{sample}_2.fastq', sample=samples)
+        expand('fastq/{sample}_2.fastq', sample=samples),
+        'dada2_1.14.0a.sif' #TODO: this is janky
     output:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
-        expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples)
+        expand('intermediate/{sample}.R2.filtered.fastq.gz', sample=samples)
     threads: 8
     resources:
         mem_mb=16000,
@@ -59,7 +62,7 @@ rule filter_paired:
 rule errormodel_paired:
     input:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
-        expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples)
+        expand('intermediate/{sample}.R2.filtered.fastq.gz', sample=samples)
     output:
         'err_forward_reads.rds', 'err_reverse_reads.rds',
         'forward_error_model.pdf', 'reverse_error_model.pdf'
@@ -73,7 +76,7 @@ rule errormodel_paired:
 rule make_asv_table_paired:
     input:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
-        expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
+        expand('intermediate/{sample}.R2.filtered.fastq.gz', sample=samples),
         'err_forward_reads.rds', 'err_reverse_reads.rds'
     output:
         'summary.tsv', 'ASV.tsv', 'asv.rds'
