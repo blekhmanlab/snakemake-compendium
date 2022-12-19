@@ -14,6 +14,7 @@ samples <- gsub('intermediate/(\\w+)\\.R1.filtered.fastq.gz$', '\\1', filtered_f
 ###########################
 
 # load error models from previous step
+filtered_out <- readRDS('filtered_out.rds')
 err_forward_reads <- readRDS('err_forward_reads.rds')
 err_reverse_reads <- readRDS('err_reverse_reads.rds')
 

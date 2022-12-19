@@ -36,4 +36,8 @@ filtered_out <- filterAndTrim(forward_reads, filtered_forward_reads,
                               truncQ=2, rm.phix=TRUE, multithread=8,
                               verbose=TRUE, matchIDs=tomatch)
 
-log('Filtering complete')
+log('Filtering complete. Saving results...')
+
+saveRDS(filtered_out, file='filtered_out.rds')
+
+log('Filtering results saved. Done.')

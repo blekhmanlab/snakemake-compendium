@@ -47,7 +47,8 @@ rule filter_paired:
         'dada2_1.14.0a.sif' #TODO: this is janky
     output:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
-        expand('intermediate/{sample}.R2.filtered.fastq.gz', sample=samples)
+        expand('intermediate/{sample}.R2.filtered.fastq.gz', sample=samples),
+        'filtered_out.rds'
     threads: 8
     resources:
         mem_mb=16000,
