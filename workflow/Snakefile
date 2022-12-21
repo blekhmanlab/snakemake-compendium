@@ -42,10 +42,7 @@ checkpoint sra_to_fastq:
     shell:
         """
         fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}
-        
-        for file in *_1.fastq; do 
-            mv "$file" "${{file%_1.fastq}}.fastq"
-        done
+        mv {wildcards.sample}_1.fastq {wildcards.sample}.fastq || true
         """
 
 #######################################
