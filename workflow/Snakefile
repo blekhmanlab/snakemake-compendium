@@ -1,16 +1,8 @@
-# The only problem with this implementation is that for paired-end
-# samples, the pipeline is triggered for paired AND single-end processing
-# for some reason. I am sad.
-
 report: "report/workflow.rst"
 #configfile: "config/config.yaml"
 
 with open('SraAccList.txt', 'r') as file:
     samples = file.read().splitlines()
-
-ruleorder: filter_paired > filter_single # if there are paired-end files, use them
-ruleorder: errormodel_paired > errormodel_single
-ruleorder: make_asv_table_paired > make_asv_table_single
 
 shell.executable("/bin/sh") # sra-tools container doesn't have bash
 
@@ -44,106 +36,29 @@ rule sra_to_fastq:
     resources:
         mem_mb=2000,
         runtime=480
-    shell:
-        """
-            fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}
-            if [ -f "fastq/{wildcards.sample}_2.fastq" ]; then
-                touch {wildcards.sample}.double
-            else
-                touch {wildcards.sample}.single
-            fi
-        """
+    shell: 'fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}'
 
-checkpoint check_reads:
+rule filter:
     input:
         expand('fastq/{sample}_1.fastq', sample=samples)
     output:
-        'flag.single'
-    resources:
-        mem_mb=500,
-        runtime=120
-    shell: """
-        filecount1=$(ls -l fastq/*_1.fastq | wc -l)
-        filecount2=$(ls -l fastq/*_2.fastq | wc -l)
-
-        if [[ $filecount1 -ne $filecount2 ]]; then
-            touch flag.single
-        fi
-    """
-
-#######################################
-###### Paired-end pipeline
-#######################################
-rule filter_paired:
-    input:
-        expand('fastq/{sample}_1.fastq', sample=samples),
-        expand('fastq/{sample}_2.fastq', sample=samples)
-    output:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
-        expand('intermediate/{sample}.R2.filtered.fastq.gz', sample=samples)
-        #'filtered_out.rds'
+        'filtered_out.rds'
     threads: 8
     resources:
         mem_mb=16000,
         runtime=1440
     shell:
-        'singularity exec dada2_1.14.0a.sif Rscript scripts/paired_filter.R'
+        'singularity exec dada2_1.14.0a.sif Rscript scripts/filter.R'
     #container:
     #    'docker://blekhmanlab/dada2:1.18.0'
     #shell:
     #    'Rscript scripts/process_paired_end.R'
 
-rule errormodel_paired:
+rule errormodel:
     input:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
-        expand('intermediate/{sample}.R2.filtered.fastq.gz', sample=samples)
-    output:
-        'err_forward_reads.rds', 'err_reverse_reads.rds',
-        'forward_error_model.pdf', 'reverse_error_model.pdf'
-    threads: 8
-    resources:
-        mem_mb=16000,
-        runtime=1440
-    shell:
-        'singularity exec dada2_1.14.0a.sif Rscript scripts/paired_error_models.R'
-
-rule make_asv_table_paired:
-    input:
-        expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
-        expand('intermediate/{sample}.R2.filtered.fastq.gz', sample=samples),
-        'err_forward_reads.rds', 'err_reverse_reads.rds'
-    output:
-        'summary.tsv', 'ASV.tsv', 'asv.rds'
-    threads: 8
-    resources:
-        mem_mb=64000, # TODO: scale this based on sample count
-        runtime=1440
-    shell:
-        'singularity exec dada2_1.14.0a.sif Rscript scripts/paired_generate_asvs.R'
-
-#######################################
-###### Single-end pipeline
-#######################################
-rule filter_single:
-    input:
-        expand('fastq/{sample}_1.fastq', sample=samples)
-    output:
-        expand('intermediate/{sample}.filtered.fastq.gz', sample=samples)
-        #'filtered_out.rds'
-    threads: 8
-    resources:
-        mem_mb=16000,
-        runtime=1440
-    shell:
-        'singularity exec dada2_1.14.0a.sif Rscript scripts/paired_filter.R'
-    #container:
-    #    'docker://blekhmanlab/dada2:1.18.0'
-    #shell:
-    #    'Rscript scripts/process_paired_end.R'
-
-rule errormodel_single:
-    input:
-        expand('intermediate/{sample}.filtered.fastq.gz', sample=samples)
+        'filtered_out.rds'
     output:
         'err_forward_reads.rds',
         'forward_error_model.pdf'
@@ -152,11 +67,11 @@ rule errormodel_single:
         mem_mb=16000,
         runtime=1440
     shell:
-        'singularity exec dada2_1.14.0a.sif Rscript scripts/paired_error_models.R'
+        'singularity exec dada2_1.14.0a.sif Rscript scripts/error_models.R'
 
-rule make_asv_table_single:
+rule make_asv_table:
     input:
-        expand('intermediate/{sample}.filtered.fastq.gz', sample=samples),
+        expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
         'err_forward_reads.rds'
     output:
         'summary.tsv', 'ASV.tsv', 'asv.rds'
@@ -165,9 +80,8 @@ rule make_asv_table_single:
         mem_mb=64000, # TODO: scale this based on sample count
         runtime=1440
     shell:
-        'singularity exec dada2_1.14.0a.sif Rscript scripts/paired_generate_asvs.R'
+        'singularity exec dada2_1.14.0a.sif Rscript scripts/generate_asvs.R'
 
-#######################################
 rule assign_taxonomy:
     input:
         'asv.rds', 'resources/silva_nr99_v138_train_set.fa.gz'

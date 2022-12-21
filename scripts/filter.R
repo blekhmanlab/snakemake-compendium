@@ -10,11 +10,19 @@ samples <- scan("SraAccList.txt", what="character")
 forward_reads <- paste0("fastq/", samples, "_1.fastq")
 # and one with the reverse
 reverse_reads <- paste0("fastq/", samples, "_2.fastq")
+
 # and variables holding file names for the forward and reverse
 # filtered reads we're going to generate below
 filtered_forward_reads <- paste0("intermediate/", samples, ".R1.filtered.fastq.gz")
 filtered_reverse_reads <- paste0("intermediate/", samples, ".R2.filtered.fastq.gz")
 
+# This determines whether we should use paired-end processing or single-end
+paired <- sum(file.exists(reverse_reads)) == length(reverse_reads)
+if(paired) {
+    log('Paired-end data found!')
+} else {
+    log('Processing as single-end data')
+}
 
 #########################
 # Quality filtering
@@ -31,10 +39,17 @@ if (length(args) > 0) {
     tomatch = TRUE
   }
 }
-filtered_out <- filterAndTrim(forward_reads, filtered_forward_reads,
+
+if(paired) {
+    filtered_out <- filterAndTrim(forward_reads, filtered_forward_reads,
                               reverse_reads, filtered_reverse_reads,
                               truncQ=2, rm.phix=TRUE, multithread=8,
                               verbose=TRUE, matchIDs=tomatch)
+} else {
+    filtered_out <- filterAndTrim(forward_reads, filtered_forward_reads,
+                              truncQ=2, rm.phix=TRUE, multithread=8,
+                              verbose=TRUE)
+}
 
 log('Filtering complete. Saving results...')
 
