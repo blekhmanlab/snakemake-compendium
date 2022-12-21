@@ -43,8 +43,8 @@ checkpoint sra_to_fastq:
         """
         fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}
         
-        for file in *_R1.fastq; do 
-            mv "$file" "${{file%_R1.fastq}}.fastq"
+        for file in *_1.fastq; do 
+            mv "$file" "${{file%_1.fastq}}.fastq"
         done
         """
 
@@ -54,7 +54,7 @@ checkpoint sra_to_fastq:
 rule filter_paired:
     input:
         expand('fastq/{sample}.fastq', sample=samples),
-        expand('fastq/{sample}_R2.fastq', sample=samples)
+        expand('fastq/{sample}_2.fastq', sample=samples)
     output:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
         expand('intermediate/{sample}.R2.filtered.fastq.gz', sample=samples)
