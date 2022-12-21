@@ -1,4 +1,6 @@
-import os.path
+# The only problem with this implementation is that for paired-end
+# samples, the pipeline is triggered for paired AND single-end processing
+# for some reason. I am sad.
 
 report: "report/workflow.rst"
 #configfile: "config/config.yaml"
@@ -7,6 +9,9 @@ with open('SraAccList.txt', 'r') as file:
     samples = file.read().splitlines()
 
 ruleorder: filter_paired > filter_single # if there are paired-end files, use them
+ruleorder: errormodel_paired > errormodel_single
+ruleorder: make_asv_table_paired > make_asv_table_single
+
 shell.executable("/bin/sh") # sra-tools container doesn't have bash
 
 rule all:
@@ -28,7 +33,7 @@ rule sra_prefetch:
     shell:
         'prefetch --option-file {input}'
 
-checkpoint sra_to_fastq:
+rule sra_to_fastq:
     input:
         '{sample}/{sample}.sra'
     output:
@@ -40,7 +45,31 @@ checkpoint sra_to_fastq:
         mem_mb=2000,
         runtime=480
     shell:
-        'fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}'
+        """
+            fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}
+            if [ -f "fastq/{wildcards.sample}_2.fastq" ]; then
+                touch {wildcards.sample}.double
+            else
+                touch {wildcards.sample}.single
+            fi
+        """
+
+checkpoint check_reads:
+    input:
+        expand('fastq/{sample}_1.fastq', sample=samples)
+    output:
+        'flag.single'
+    resources:
+        mem_mb=500,
+        runtime=120
+    shell: """
+        filecount1=$(ls -l fastq/*_1.fastq | wc -l)
+        filecount2=$(ls -l fastq/*_2.fastq | wc -l)
+
+        if [[ $filecount1 -ne $filecount2 ]]; then
+            touch flag.single
+        fi
+    """
 
 #######################################
 ###### Paired-end pipeline
@@ -97,8 +126,7 @@ rule make_asv_table_paired:
 #######################################
 rule filter_single:
     input:
-      expand('fastq/{sample}_1.fastq', sample=samples)
-      #'dada2_1.14.0a.sif' #TODO: this is janky
+        expand('fastq/{sample}_1.fastq', sample=samples)
     output:
         expand('intermediate/{sample}.filtered.fastq.gz', sample=samples)
         #'filtered_out.rds'
@@ -140,7 +168,6 @@ rule make_asv_table_single:
         'singularity exec dada2_1.14.0a.sif Rscript scripts/paired_generate_asvs.R'
 
 #######################################
-
 rule assign_taxonomy:
     input:
         'asv.rds', 'resources/silva_nr99_v138_train_set.fa.gz'
