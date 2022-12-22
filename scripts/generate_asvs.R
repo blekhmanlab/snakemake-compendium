@@ -61,7 +61,7 @@ if(paired) {
 
     for(sam in samples) {
         cat("Processing:", sam, "\n")
-        derepF <- derepFastq(paste("../intermediate/", sam, ".R1.filtered.fastq.gz", sep=""))
+        derepF <- derepFastq(paste("intermediate/", sam, ".R1.filtered.fastq.gz", sep=""))
         ddF[[sam]] <- dada(derepF, err=err_forward_reads, multithread=TRUE)
     }
     rm(derepF)
@@ -101,8 +101,10 @@ if(paired) {
     chim_removed_val <- round(((length_val-nochim_val)/merged_val)*100, 1)
 
     summary_tab <- data.frame(dinput=filtered_out[,1],
-                            filter=filtered_out[,2], forwd=sapply(ddF, getN),
-                            revse=sapply(ddR, getN), merged=merged_val,
+                            filter=filtered_out[,2],
+                            forwd=sapply(ddF, getN),
+                            revse=sapply(ddR, getN),
+                            merged=merged_val,
                             length=length_val,
                             nonchim=nochim_val,
                             chim_perc=chim_removed_val,
@@ -128,7 +130,8 @@ if(paired) {
                                 retained_perc=round((100*nochim_val)/forwd_val, 1))
     } else {
         summary_tab <- data.frame(dinput=filtered_out[,1],
-                            filter=filtered_out[,2], forwd=forwd_val,
+                            filter=filtered_out[,2],
+                            forwd=forwd_val,
                             length=length_val,
                             nonchim=nochim_val,
                             chim_perc=chim_removed_val,
