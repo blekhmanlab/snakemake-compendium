@@ -54,8 +54,7 @@ if(paired) {
     rm(derepF); rm(derepR)
 
     seqtab <- makeSequenceTable(mergers)
-}
-else {
+} else {
     ddF <- vector("list", length(samples))
     names(ddF) <- samples
 
@@ -108,8 +107,7 @@ if(paired) {
                             nonchim=nochim_val,
                             chim_perc=chim_removed_val,
                             retained_perc=round((nochim_val*100)/filtered_out[,1], 1))
-}
-else {
+} else {
     forwd_val <- sapply(ddF, getN)
     nochim_val <- rowSums(seqtab.nochim)
     length_val <- rowSums(seqtab.noshort)
