@@ -11,7 +11,6 @@ rule all:
         'ASVs.fa', 'ASVs_counts.tsv', 'ASVs_taxonomy.tsv'
 
 rule sra_prefetch:
-    retries: 3
     input:
         'SraAccList.txt'
     output:
@@ -19,6 +18,7 @@ rule sra_prefetch:
     container:
         'docker://ncbi/sra-tools:3.0.1'
     threads: 1
+    retries: 3
     resources:
         mem_mb=500,
         runtime=480
@@ -38,15 +38,21 @@ rule sra_to_fastq:
         runtime=480
     shell: 'fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}'
 
+def get_mem_mb_filter(wildcards, attempt):
+    tiers = [16, 24, 48] # in gigabytes
+    return tiers[attempt-1] * 1000
+
 rule filter:
+    retries: 3
     input:
         expand('fastq/{sample}_1.fastq', sample=samples)
     output:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
         'filtered_out.rds'
     threads: 8
+    retries: 3
     resources:
-        mem_mb=16000,
+        mem_mb=get_mem_mb_filter,
         runtime=1440
     shell:
         'singularity exec dada2_1.14.0a.sif Rscript scripts/filter.R'
@@ -54,6 +60,10 @@ rule filter:
     #    'docker://blekhmanlab/dada2:1.18.0'
     #shell:
     #    'Rscript scripts/process_paired_end.R'
+
+def get_mem_mb_errormodel(wildcards, attempt):
+    tiers = [16, 32, 64] # in gigabytes
+    return tiers[attempt-1] * 1000
 
 rule errormodel:
     input:
@@ -63,11 +73,27 @@ rule errormodel:
         'err_forward_reads.rds',
         'forward_error_model.pdf'
     threads: 8
+    retries: 3
     resources:
-        mem_mb=16000,
+        mem_mb=get_mem_mb_errormodel,
         runtime=1440
     shell:
         'singularity exec dada2_1.14.0a.sif Rscript scripts/error_models.R'
+
+def get_mem_mb_dada(wildcards, attempt):
+    if len(samples) < 50:
+        tiers = [16, 32, 48] # in gigabytes
+    elif len(samples) < 150:
+        tiers = [32, 48, 56]
+    elif len(samples) < 400:
+        tiers = [48, 64, 96]
+    else:
+        tiers = [64, 80, 96]
+    return(tiers[attempt-1] * 1000)
+
+def get_runtime_dada(wildcards, attempt):
+    tiers = [48, 64, 96] # hours
+    return(tiers[attempt-1] * 60)
 
 rule make_asv_table:
     input:
@@ -76,9 +102,10 @@ rule make_asv_table:
     output:
         'summary.tsv', 'ASV.tsv', 'asv.rds'
     threads: 8
+    retries: 3
     resources:
-        mem_mb=64000, # TODO: scale this based on sample count
-        runtime=1440
+        mem_mb=get_mem_mb_dada,
+        runtime=get_runtime_dada
     shell:
         'singularity exec dada2_1.14.0a.sif Rscript scripts/generate_asvs.R'
 
@@ -88,8 +115,9 @@ rule assign_taxonomy:
     output:
         'ASVs.fa', 'ASVs_counts.tsv', 'ASVs_taxonomy.tsv'
     threads: 8
+    retries: 3
     resources:
-        mem_mb=16000,
-        runtime=1440
+        mem_mb=get_mem_mb_dada,
+        runtime=get_runtime_dada
     shell:
         'singularity exec dada2_1.14.0a.sif Rscript scripts/assign_taxonomy.R'
