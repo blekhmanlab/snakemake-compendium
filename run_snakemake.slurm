@@ -8,13 +8,13 @@
 
 module load python
 
-if [! -d "./venv" ]; then
+if [ ! -d "./venv" ]; then
     python -m venv venv
 fi
 
 source venv/bin/activate
 
-if [! -f "./venv/bin/pytest" ]; then
+if [ ! -f "./venv/bin/pytest" ]; then
     pip install --upgrade pip
     pip install -r requirements.txt
 fi
