@@ -111,7 +111,7 @@ rule make_asv_table:
 
 rule assign_taxonomy:
     input:
-        'asv.rds', 'resources/silva_nr99_v138_train_set.fa.gz'
+        'asv.rds', '/home/blekhman/shared/cmanager/resources/silva_nr99_v138_train_set.fa.gz'
     output:
         'ASVs.fa', 'ASVs_counts.tsv', 'ASVs_taxonomy.tsv'
     threads: 8
