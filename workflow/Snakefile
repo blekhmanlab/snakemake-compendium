@@ -55,7 +55,7 @@ rule filter:
         mem_mb=get_mem_mb_filter,
         runtime=1440
     shell:
-        'singularity exec /home/blekhman/shared/cmanager/dada2_1.14.0a.sif Rscript scripts/filter.R'
+        'singularity exec /home/blekhman/shared/cmanager/resources/dada2_1.14.0a.sif Rscript scripts/filter.R'
     #container:
     #    'docker://blekhmanlab/dada2:1.18.0'
     #shell:
@@ -78,7 +78,7 @@ rule errormodel:
         mem_mb=get_mem_mb_errormodel,
         runtime=1440
     shell:
-        'singularity exec /home/blekhman/shared/cmanager/dada2_1.14.0a.sif Rscript scripts/error_models.R'
+        'singularity exec /home/blekhman/shared/cmanager/resources/dada2_1.14.0a.sif Rscript scripts/error_models.R'
 
 def get_mem_mb_dada(wildcards, attempt):
     if len(samples) < 50:
@@ -107,7 +107,7 @@ rule make_asv_table:
         mem_mb=get_mem_mb_dada,
         runtime=get_runtime_dada
     shell:
-        'singularity exec /home/blekhman/shared/cmanager/dada2_1.14.0a.sif Rscript scripts/generate_asvs.R'
+        'singularity exec /home/blekhman/shared/cmanager/resources/dada2_1.14.0a.sif Rscript scripts/generate_asvs.R'
 
 rule assign_taxonomy:
     input:
@@ -120,4 +120,4 @@ rule assign_taxonomy:
         mem_mb=get_mem_mb_dada,
         runtime=get_runtime_dada
     shell:
-        'singularity exec /home/blekhman/shared/cmanager/dada2_1.14.0a.sif Rscript scripts/assign_taxonomy.R'
+        'singularity exec /home/blekhman/shared/cmanager/resources/dada2_1.14.0a.sif Rscript scripts/assign_taxonomy.R'
