@@ -39,7 +39,7 @@ rule sra_to_fastq:
     shell: 'fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}'
 
 def get_mem_mb_filter(wildcards, attempt):
-    tiers = [16, 24, 48] # in gigabytes
+    tiers = [16, 24, 48, 64] # in gigabytes
     return tiers[attempt-1] * 1000
 
 rule filter:
@@ -62,7 +62,7 @@ rule filter:
     #    'Rscript scripts/process_paired_end.R'
 
 def get_mem_mb_errormodel(wildcards, attempt):
-    tiers = [16, 32, 64] # in gigabytes
+    tiers = [16, 32, 64, 96]
     return tiers[attempt-1] * 1000
 
 rule errormodel:
@@ -82,17 +82,17 @@ rule errormodel:
 
 def get_mem_mb_dada(wildcards, attempt):
     if len(samples) < 50:
-        tiers = [16, 32, 48] # in gigabytes
+        tiers = [16, 32, 48, 56]
     elif len(samples) < 150:
-        tiers = [32, 48, 56]
+        tiers = [32, 48, 56, 72]
     elif len(samples) < 400:
-        tiers = [48, 64, 96]
+        tiers = [48, 64, 96, 96]
     else:
-        tiers = [64, 80, 96]
+        tiers = [64, 80, 96, 118]
     return(tiers[attempt-1] * 1000)
 
 def get_runtime_dada(wildcards, attempt):
-    tiers = [48, 64, 96] # hours
+    tiers = [48, 64, 96, 96] # hours
     return(tiers[attempt-1] * 60)
 
 rule make_asv_table:
