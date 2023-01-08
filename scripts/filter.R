@@ -7,7 +7,7 @@ log <- function(message) print(paste(date(), message))
 samples <- scan("SraAccList.txt", what="character")
 
 # one holding the file names of all the forward reads
-forward_reads <- paste0("fastq/", samples, "_1.fastq")
+forward_reads <- paste0("fastq/", samples, ".fastq")
 # and one with the reverse
 reverse_reads <- paste0("fastq/", samples, "_2.fastq")
 

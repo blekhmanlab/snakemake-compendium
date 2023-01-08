@@ -29,14 +29,23 @@ rule sra_to_fastq:
     input:
         '{sample}/{sample}.sra'
     output:
-        'fastq/{sample}_1.fastq'
+        'fastq/{sample}.fastq'
     container:
         'docker://ncbi/sra-tools:3.0.1'
     threads: 4
     resources:
         mem_mb=2000,
         runtime=480
-    shell: 'fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}'
+    run:
+        # Split the SRA file into FASTQ files
+        shell("fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}")
+        # then remove the "_1" from any fastq file names
+        # (This is done because single-end projects inconsistently have this appended to the sample
+        # names, and it's easier to search for files that HAVE an extra "_1" than files that don't.)
+        for old in os.listdir('fastq'):
+            new = file.replace('_1.fastq', '.fastq')
+            if new != old:
+                os.rename(old, new)
 
 def get_mem_mb_filter(wildcards, attempt):
     tiers = [16, 24, 48, 64] # in gigabytes
@@ -45,7 +54,7 @@ def get_mem_mb_filter(wildcards, attempt):
 rule filter:
     retries: 3
     input:
-        expand('fastq/{sample}_1.fastq', sample=samples)
+        expand('fastq/{sample}.fastq', sample=samples)
     output:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
         'filtered_out.rds'
