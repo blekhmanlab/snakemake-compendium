@@ -36,16 +36,24 @@ rule sra_to_fastq:
     resources:
         mem_mb=2000,
         runtime=480
-    run:
-        # Split the SRA file into FASTQ files
-        shell("fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}")
-        # then remove the "_1" from any fastq file names
-        # (This is done because single-end projects inconsistently have this appended to the sample
-        # names, and it's easier to search for files that HAVE an extra "_1" than files that don't.)
-        for old in os.listdir('fastq'):
-            new = file.replace('_1.fastq', '.fastq')
-            if new != old:
-                os.rename(old, new)
+    shell:
+        """
+            fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}
+            cd fastq
+            for file in *_1.fastq; do
+                mv -- "$file" "${file%_1.fastq}.fastq"
+            done
+        """
+    # run:   # "run" directives don't work with Singularity
+    #     # Split the SRA file into FASTQ files
+    #     shell("fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}")
+    #     # then remove the "_1" from any fastq file names
+    #     # (This is done because single-end projects inconsistently have this appended to the sample
+    #     # names, and it's easier to search for files that HAVE an extra "_1" than files that don't.)
+    #     for old in os.listdir('fastq'):
+    #         new = file.replace('_1.fastq', '.fastq')
+    #         if new != old:
+    #             os.rename(old, new)
 
 def get_mem_mb_filter(wildcards, attempt):
     tiers = [16, 24, 48, 64] # in gigabytes
