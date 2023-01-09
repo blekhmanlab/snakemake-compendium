@@ -46,6 +46,7 @@ rule sra_to_fastq:
     shell:
         """
             fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}
+            cd fastq
             [ ! -f {wildcards.sample}_1.fastq ] || mv {wildcards.sample}_1.fastq {wildcards.sample}.fastq
         """
     # run:   # "run" directives don't work with Singularity
