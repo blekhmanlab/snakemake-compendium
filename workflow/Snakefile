@@ -1,5 +1,5 @@
 report: "report/workflow.rst"
-#configfile: "config/config.yaml"
+configfile: "config/config.yaml"
 
 with open('SraAccList.txt', 'r') as file:
     samples = file.read().splitlines()
@@ -8,13 +8,16 @@ shell.executable("/bin/sh") # sra-tools container doesn't have bash
 
 rule all:
     input:
-        'ASVs.fa', 'ASVs_counts.tsv', 'ASVs_taxonomy.tsv'
+        'ASVs.fa', 'ASVs_counts.tsv', 'ASVs_taxonomy.tsv','running.txt'
+    shell:
+        'rm running.txt'
 
 rule sra_prefetch:
     input:
         'SraAccList.txt'
     output:
-        expand('{sample}/{sample}.sra',sample=samples)
+        expand('{sample}/{sample}.sra',sample=samples),
+        'running.txt' # for keeping track of whether the pipeline is active
     container:
         'docker://ncbi/sra-tools:3.0.1'
     threads: 1
@@ -23,7 +26,10 @@ rule sra_prefetch:
         mem_mb=500,
         runtime=480
     shell:
-        'prefetch --option-file {input}'
+        """
+        touch running.txt
+        prefetch --option-file {input}
+        """
 
 rule sra_to_fastq:
     input:
@@ -125,7 +131,7 @@ rule make_asv_table:
 
 rule assign_taxonomy:
     input:
-        'asv.rds', '/panfs/roc/groups/7/blekhman/shared/cmanager/resources/silva_nr99_v138_train_set.fa.gz'
+        'asv.rds', config['silva_path']
     output:
         'ASVs.fa', 'ASVs_counts.tsv', 'ASVs_taxonomy.tsv'
     threads: 8
