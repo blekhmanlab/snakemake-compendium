@@ -1,6 +1,13 @@
 report: "report/workflow.rst"
 configfile: "config/config.yaml"
 
+onstart:
+    shell('touch running.txt')
+onsuccess:
+    shell('rm running.txt')
+onerror:
+    shell('rm running.txt')
+
 with open('SraAccList.txt', 'r') as file:
     samples = file.read().splitlines()
 
@@ -8,16 +15,13 @@ shell.executable("/bin/sh") # sra-tools container doesn't have bash
 
 rule all:
     input:
-        'ASVs.fa', 'ASVs_counts.tsv', 'ASVs_taxonomy.tsv','running.txt'
-    shell:
-        'rm running.txt'
+        'ASVs.fa', 'ASVs_counts.tsv', 'ASVs_taxonomy.tsv'
 
 rule sra_prefetch:
     input:
         'SraAccList.txt'
     output:
-        expand('{sample}/{sample}.sra',sample=samples),
-        'running.txt' # for keeping track of whether the pipeline is active
+        expand('{sample}/{sample}.sra',sample=samples)
     container:
         'docker://ncbi/sra-tools:3.0.1'
     threads: 1
@@ -26,10 +30,7 @@ rule sra_prefetch:
         mem_mb=500,
         runtime=480
     shell:
-        """
-        touch running.txt
-        prefetch --option-file {input}
-        """
+        "prefetch --option-file {input}"
 
 rule sra_to_fastq:
     input:
