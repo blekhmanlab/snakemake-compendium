@@ -14,7 +14,7 @@ fi
 
 source venv/bin/activate
 
-if [ ! -f "./venv/bin/pytest" ]; then
+if [ ! -f "./venv/bin/snakemake" ]; then
     pip install --upgrade pip
     pip install -r requirements.txt
 fi
