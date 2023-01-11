@@ -1,2 +1,3 @@
-silva_path: /panfs/roc/groups/7/blekhman/shared/cmanager/resources/silva_nr99_v138_train_set.fa.gz
-#silva_path: resources/silva_nr99_v138_train_set.fa.gz
+# Where are shared resources stored? (e.g. container images, silva db)
+# NOTE: This currently needs to be pull into the R scripts manually
+resources_path: '/panfs/roc/groups/7/blekhman/shared/cmanager/resources/'

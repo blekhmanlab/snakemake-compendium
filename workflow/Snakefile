@@ -77,7 +77,7 @@ rule filter:
         mem_mb=get_mem_mb_filter,
         runtime=1440
     shell:
-        'singularity exec --bind /panfs/roc/groups/7/blekhman/shared/cmanager /panfs/roc/groups/7/blekhman/shared/cmanager/resources/dada2_1.14.0a.sif Rscript scripts/filter.R'
+        f'singularity exec --bind $(pwd) {config['resources_path']}dada2_1.26.0.sif Rscript scripts/filter.R'
     #container:
     #    'docker://blekhmanlab/dada2:1.18.0'
     #shell:
@@ -129,11 +129,11 @@ rule make_asv_table:
         mem_mb=get_mem_mb_dada,
         runtime=get_runtime_dada
     shell:
-        'singularity exec --bind /panfs/roc/groups/7/blekhman/shared/cmanager /panfs/roc/groups/7/blekhman/shared/cmanager/resources/dada2_1.14.0a.sif Rscript scripts/generate_asvs.R'
+        f'singularity exec --bind $(pwd) {config['resources_path']}dada2_1.26.0.sif Rscript scripts/generate_asvs.R'
 
 rule assign_taxonomy:
     input:
-        'asv.rds', config['silva_path']
+        'asv.rds', f"{config['resources_path']}silva_nr99_v138_train_set.fa.gz"
     output:
         'ASVs.fa', 'ASVs_counts.tsv', 'ASVs_taxonomy.tsv'
     threads: 8
@@ -142,4 +142,4 @@ rule assign_taxonomy:
         mem_mb=get_mem_mb_dada,
         runtime=get_runtime_dada
     shell:
-        'singularity exec --bind /panfs/roc/groups/7/blekhman/shared/cmanager /panfs/roc/groups/7/blekhman/shared/cmanager/resources/dada2_1.14.0a.sif Rscript scripts/assign_taxonomy.R'
+        f'singularity exec --bind $(pwd) {config['resources_path']}dada2_1.26.0.sif Rscript scripts/assign_taxonomy.R'
