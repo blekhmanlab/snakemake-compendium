@@ -5,6 +5,7 @@ onstart:
     shell('touch running.txt')
 onsuccess:
     shell('rm running.txt')
+    shell(f"sbatch --job-name=forward -o logs/{timestamp}.log --chdir={config['cmanager_path']} run_autoforward.slurm")
 onerror:
     shell('rm running.txt')
 
