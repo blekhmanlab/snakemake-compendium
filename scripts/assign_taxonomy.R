@@ -8,7 +8,7 @@ log <- function(message) print(paste(date(), message))
 # load asv table from previous step
 seqtab.nochim <- readRDS('asv.rds')
 log('Assigning taxonomy...')
-taxa <- assignTaxonomy(seqtab.nochim, "/panfs/roc/groups/7/blekhman/shared/cmanager/resources/silva_nr99_v138_train_set.fa.gz", multithread=8, tryRC=T)
+taxa <- assignTaxonomy(seqtab.nochim, "/scratch.global/rabdill/cmanager/resources/silva_nr99_v138_train_set.fa.gz", multithread=8, tryRC=T)
 
 asv_seqs <- colnames(seqtab.nochim)
 asv_headers <- vector(dim(seqtab.nochim)[2], mode="character")
