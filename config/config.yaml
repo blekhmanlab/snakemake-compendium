@@ -1,7 +1,7 @@
 # Where are shared resources stored? (e.g. container images, silva db)
 # NOTE: This currently needs to be pull into the R scripts manually
-resources_path: '/panfs/roc/groups/7/blekhman/shared/cmanager/resources/'
-
+#resources_path: '/panfs/roc/groups/7/blekhman/shared/cmanager/resources/'
+resources_path: '/scratch.global/rabdill/cmanager/resources/'
 # Where is the compendium manager running? (This should be the parent
 # directory of all the project folders also.)
 cmanager_path: '/scratch.global/rabdill/cmanager'
