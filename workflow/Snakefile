@@ -1,11 +1,12 @@
-report: "report/workflow.rst"
+from datetime import datetime
+#report: "report/workflow.rst"
 configfile: "config/config.yaml"
 
 onstart:
     shell('touch running.txt')
 onsuccess:
     shell('rm running.txt')
-    shell(f"sbatch --job-name=forward -o logs/{timestamp}.log --chdir={config['cmanager_path']} run_autoforward.slurm")
+    shell(f"sbatch --job-name=forward -o logs/{int(round(datetime.now().timestamp()))}.log --chdir={config['cmanager_path']} run_autoforward.slurm")
 onerror:
     shell('rm running.txt')
 
