@@ -101,7 +101,7 @@ rule errormodel:
         mem_mb=get_mem_mb_errormodel,
         runtime=1440
     shell:
-        f"singularity exec --bind {config['cmanager_path']} /panfs/roc/groups/7/blekhman/shared/cmanager/resources/dada2_1.14.0a.sif Rscript scripts/error_models.R"
+        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}dada2_1.26.0.sif Rscript scripts/error_models.R"
 
 def get_mem_mb_dada(wildcards, attempt):
     if len(samples) < 50:
