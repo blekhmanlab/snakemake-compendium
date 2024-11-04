@@ -19,7 +19,7 @@ if [ ! -f "./venv/bin/snakemake" ]; then
     pip install -r requirements.txt
 fi
 
-snakemake --use-singularity --jobs 45 --slurm --default-resources slurm_account=blekhman slurm_partition=blekhman
+snakemake --use-singularity
 
 # to submit:
 # sbatch --job-name=next -o nextone.log run_snakemake.slurm
