@@ -17,7 +17,7 @@ shell.executable("/bin/sh") # sra-tools container doesn't have bash
 
 rule all:
     input:
-        'ASVs.fa', 'ASVs_counts.tsv', 'ASVs_taxonomy.tsv'
+        'summary.tsv', 'ASV.tsv', 'asv.rds'
 
 rule sra_prefetch:
     input:
@@ -132,16 +132,3 @@ rule make_asv_table:
         runtime=get_runtime_dada
     shell:
         f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}dada2_1.26.0.sif Rscript scripts/generate_asvs.R"
-
-rule assign_taxonomy:
-    input:
-        'asv.rds', f"{config['resources_path']}silva_nr99_v138_train_set.fa.gz"
-    output:
-        'ASVs.fa', 'ASVs_counts.tsv', 'ASVs_taxonomy.tsv'
-    threads: 8
-    retries: 3
-    resources:
-        mem_mb=get_mem_mb_dada,
-        runtime=get_runtime_dada
-    shell:
-        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}dada2_1.26.0.sif Rscript scripts/assign_taxonomy.R"
