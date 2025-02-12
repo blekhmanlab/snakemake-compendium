@@ -1,5 +1,5 @@
 from datetime import datetime
-#report: "report/workflow.rst"
+
 configfile: "config/config.yaml"
 
 onstart:
@@ -23,44 +23,29 @@ rule sra_prefetch:
     input:
         'SraAccList.txt'
     output:
-        expand('{sample}/{sample}.sra',sample=samples)
-    container:
-        'docker://ncbi/sra-tools:3.0.1'
+        temp(expand('{sample}/{sample}.sra',sample=samples))
     threads: 1
     retries: 3
     resources:
         mem_mb=500,
         runtime=480
     shell:
-        "prefetch --option-file {input}"
+        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}sra-tools_3.0.1.sif prefetch --option-file SraAccList.txt"
 
 rule sra_to_fastq:
     input:
         '{sample}/{sample}.sra'
     output:
         'fastq/{sample}.fastq'
-    container:
-        'docker://ncbi/sra-tools:3.0.1'
     threads: 4
     resources:
         mem_mb=2000,
         runtime=480
     shell:
         """
-            fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}
-            cd fastq
-            [ ! -f {wildcards.sample}_1.fastq ] || mv {wildcards.sample}_1.fastq {wildcards.sample}.fastq
+        singularity exec --bind {config[cmanager_path]} {config[resources_path]}sra-tools_3.0.1.sif fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample} &&
+            [ ! -f fastq/{wildcards.sample}_1.fastq ] || mv fastq/{wildcards.sample}_1.fastq fastq/{wildcards.sample}.fastq
         """
-    # run:   # "run" directives don't work with Singularity
-    #     # Split the SRA file into FASTQ files
-    #     shell("fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample}")
-    #     # then remove the "_1" from any fastq file names
-    #     # (This is done because single-end projects inconsistently have this appended to the sample
-    #     # names, and it's easier to search for files that HAVE an extra "_1" than files that don't.)
-    #     for old in os.listdir('fastq'):
-    #         new = file.replace('_1.fastq', '.fastq')
-    #         if new != old:
-    #             os.rename(old, new)
 
 def get_mem_mb_filter(wildcards, attempt):
     tiers = [16, 24, 48, 64] # in gigabytes
@@ -74,16 +59,12 @@ rule filter:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
         'filtered_out.rds'
     threads: 8
-    retries: 3
+    retries: 1
     resources:
         mem_mb=get_mem_mb_filter,
         runtime=1440
     shell:
-        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}dada2_1.26.0.sif Rscript scripts/filter.R"
-    #container:
-    #    'docker://blekhmanlab/dada2:1.18.0'
-    #shell:
-    #    'Rscript scripts/process_paired_end.R'
+        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}dada2_1260a.sif Rscript scripts/filter.R"
 
 def get_mem_mb_errormodel(wildcards, attempt):
     tiers = [16, 32, 64, 96]
@@ -97,12 +78,12 @@ rule errormodel:
         'err_forward_reads.rds',
         'forward_error_model.pdf'
     threads: 8
-    retries: 3
+    retries: 1
     resources:
         mem_mb=get_mem_mb_errormodel,
         runtime=1440
     shell:
-        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}dada2_1.26.0.sif Rscript scripts/error_models.R"
+        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}dada2_1260a.sif Rscript scripts/error_models.R"
 
 def get_mem_mb_dada(wildcards, attempt):
     if len(samples) < 50:
@@ -131,4 +112,4 @@ rule make_asv_table:
         mem_mb=get_mem_mb_dada,
         runtime=get_runtime_dada
     shell:
-        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}dada2_1.26.0.sif Rscript scripts/generate_asvs.R"
+        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}dada2_1260a.sif Rscript scripts/generate_asvs.R"

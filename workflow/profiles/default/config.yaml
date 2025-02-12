@@ -1,5 +1,2 @@
 executor: slurm
 jobs: 8
-default-resources: slurm_account=blekhman slurm_partition=blekhman
-set-resources:
-  sra_prefetch:slurm_partition=build
