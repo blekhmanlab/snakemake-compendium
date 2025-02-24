@@ -31,14 +31,16 @@ samples <- gsub('intermediate/(\\w+)\\.R1.filtered.fastq.gz$', '\\1', filtered_f
 # Building error models
 #########################
 log('Building forward error model...')
-err_forward_reads <- learnErrors(filtered_forward_reads, multithread=TRUE)
+set.seed(71121)
+err_forward_reads <- learnErrors(filtered_forward_reads, multithread=TRUE, nbases = 1e8, randomize=TRUE)
 pdf('forward_error_model.pdf')
 plotErrors(err_forward_reads, nominalQ=TRUE)
 dev.off()
 
 if(paired) {
     log('Building reverse error model...')
-    err_reverse_reads <- learnErrors(filtered_reverse_reads, multithread=TRUE)
+    set.seed(92124)
+    err_reverse_reads <- learnErrors(filtered_reverse_reads, multithread=TRUE, nbases = 1e8, randomize=TRUE)
     pdf('reverse_error_model.pdf')
     plotErrors(err_reverse_reads, nominalQ=TRUE)
     dev.off()

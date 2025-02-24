@@ -62,7 +62,7 @@ if(paired) {
     for(sam in samples) {
         cat("Processing:", sam, "\n")
         derepF <- derepFastq(paste("intermediate/", sam, ".R1.filtered.fastq.gz", sep=""))
-        ddF[[sam]] <- dada(derepF, err=err_forward_reads, multithread=TRUE)
+        ddF[[sam]] <- dada(derepF, err=err_forward_reads, multithread=8)
     }
     rm(derepF)
 
@@ -76,7 +76,7 @@ log(paste('Removed',diff,'ASVs for being too short.'))
 
 # check for chimeras
 log('Removing bimeras...')
-seqtab.nochim <- removeBimeraDenovo(seqtab.noshort, verbose=T)
+seqtab.nochim <- removeBimeraDenovo(seqtab.noshort, verbose=T, multithread=8)
 
 #########################
 # Record results
