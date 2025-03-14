@@ -84,9 +84,25 @@ seqtab.nochim <- removeBimeraDenovo(seqtab.noshort, verbose=T, multithread=8)
 log('Writing ASV table...')
 write.table(seqtab.nochim, "ASV.tsv",
             sep="\t", quote=F, col.names=NA)
-saveRDS(seqtab.nochim, 'asv.rds')
 log('ASVs recorded.')
 
+log('Prepping output files...')
+asv_seqs <- colnames(seqtab.nochim)
+asv_headers <- vector(dim(seqtab.nochim)[2], mode="character")
+for (i in 1:dim(seqtab.nochim)[2]) {
+  asv_headers[i] <- paste(">ASV", i, sep="_")
+}
+# extract fasta:
+asv_fasta <- c(rbind(asv_headers, asv_seqs))
+# count table:
+asv_tab <- t(seqtab.nochim)
+row.names(asv_tab) <- sub(">", "", asv_headers)
+
+## output
+log('Writing output files...')
+write(asv_fasta, "ASVs.fa")
+write.table(asv_tab, "ASVs_counts.tsv",
+            sep="\t", quote=F, col.names=NA)
 #########################
 # Check reads dropped at each step
 #########################

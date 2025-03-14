@@ -17,7 +17,7 @@ shell.executable("/bin/sh") # sra-tools container doesn't have bash
 
 rule all:
     input:
-        'summary.tsv', 'ASV.tsv', 'asv.rds'
+        'summary.tsv', 'ASV.tsv', 'ASVs.fa', 'ASVs_counts.tsv'
 
 rule sra_prefetch:
     input:
@@ -70,6 +70,8 @@ def get_mem_mb_errormodel(wildcards, attempt):
     tiers = [16, 32, 64, 96]
     return tiers[attempt-1] * 1000
 
+# NOTE: We don't calculate the error models in parallel because it's needlessly
+# complicated to tell Snakemake to conditionally require the reverse model
 rule errormodel:
     input:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
@@ -105,7 +107,7 @@ rule make_asv_table:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
         'err_forward_reads.rds'
     output:
-        'summary.tsv', 'ASV.tsv', 'asv.rds'
+        'summary.tsv', 'ASV.tsv', 'ASVs.fa', 'ASVs_counts.tsv'
     threads: 8
     retries: 3
     resources:
