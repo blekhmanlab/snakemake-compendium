@@ -2,6 +2,9 @@ from datetime import datetime
 
 configfile: "config/config.yaml"
 
+##############
+# These conditions are used to integrate this pipeline to the Compendium Manager software
+##############
 onstart:
     shell('touch running.txt')
 onsuccess:
@@ -9,6 +12,7 @@ onsuccess:
     shell(f"sbatch --job-name=forward -o logs/{int(round(datetime.now().timestamp()))}.log --chdir={config['cmanager_path']} run_autoforward.slurm")
 onerror:
     shell('rm running.txt')
+########
 
 with open('SraAccList.txt', 'r') as file:
     samples = file.read().splitlines()
@@ -47,6 +51,8 @@ rule sra_to_fastq:
             [ ! -f fastq/{wildcards.sample}_1.fastq ] || mv fastq/{wildcards.sample}_1.fastq fastq/{wildcards.sample}.fastq
         """
 
+# This function requests more memory for the "filter" rule based on how many times
+# it has already failed.
 def get_mem_mb_filter(wildcards, attempt):
     tiers = [16, 24, 48, 64] # in gigabytes
     return tiers[attempt-1] * 1000
