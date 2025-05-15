@@ -25,12 +25,12 @@ rule sra_prefetch:
     output:
         temp(expand('{sample}/{sample}.sra',sample=samples))
     threads: 1
-    retries: 3
+    retries: 1
     resources:
         mem_mb=500,
         runtime=480
     shell:
-        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}sra-tools_3.0.1.sif prefetch --option-file SraAccList.txt"
+        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}sra-tools_3.0.1.sif prefetch --max-size 1t --option-file SraAccList.txt"
 
 rule sra_to_fastq:
     input:
