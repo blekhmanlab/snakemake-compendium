@@ -32,7 +32,7 @@ rule sra_prefetch:
     retries: 1
     resources:
         mem_mb=500,
-        runtime=480
+        runtime=180
     shell:
         f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}sra-tools_3.0.1.sif prefetch --max-size 1t --option-file SraAccList.txt"
 
