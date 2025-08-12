@@ -12,4 +12,4 @@ module load apptainer
 
 source venv/bin/activate
 
-snakemake --default-resources slurm_account=pi-blekhman slurm_partition=blekhman --set-resources sra_prefetch:slurm_partition=build
+snakemake --keep-incomplete --default-resources slurm_account=pi-blekhman slurm_partition=blekhman --set-resources sra_prefetch:slurm_partition=build
