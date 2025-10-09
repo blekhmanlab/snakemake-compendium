@@ -20,7 +20,8 @@ if(paired) {
     log('Processing as single-end data')
 }
 
-samples <- gsub('intermediate/(\\w+)\\.R1.filtered.fastq.gz$', '\\1', filtered_forward_reads)
+samples <- gsub('intermediate/(.+)\\.R1.filtered.fastq.gz$', '\\1', filtered_forward_reads)
+
 ###########################
 
 # load error models from previous step
