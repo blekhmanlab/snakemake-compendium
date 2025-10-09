@@ -7,9 +7,9 @@ log <- function(message) print(paste(date(), message))
 samples <- scan("SraAccList.txt", what="character")
 
 # one holding the file names of all the forward reads
-forward_reads <- paste0("fastq/", samples, ".fastq")
+forward_reads <- paste0("fastq/", samples, "_R1.fastq.gz")
 # and one with the reverse
-reverse_reads <- paste0("fastq/", samples, "_2.fastq")
+reverse_reads <- paste0("fastq/", samples, "_R2.fastq.gz")
 
 # Accommodating projects with samples that couldn't be downloaded
 
@@ -62,7 +62,6 @@ if(paired) {
                               truncQ=2, rm.phix=TRUE, multithread=8,
                               verbose=TRUE)
 }
-
 log('Filtering complete. Saving results...')
 
 saveRDS(filtered_out, file='filtered_out.rds')

@@ -4,8 +4,8 @@ library(dada2)
 # Setup carried over from previous step
 log <- function(message) print(paste(date(), message))
 samples <- scan("SraAccList.txt", what="character")
-forward_reads <- paste0("fastq/", samples, "_1.fastq")
-reverse_reads <- paste0("fastq/", samples, "_2.fastq")
+forward_reads <- paste0("fastq/", samples, "_R1.fastq.gz")
+reverse_reads <- paste0("fastq/", samples, "_R2.fastq.gz")
 filtered_forward_reads <- paste0("intermediate/", samples, ".R1.filtered.fastq.gz")
 filtered_reverse_reads <- paste0("intermediate/", samples, ".R2.filtered.fastq.gz")
 

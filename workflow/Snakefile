@@ -5,14 +5,6 @@ configfile: "config/config.yaml"
 ##############
 # These conditions are used to integrate this pipeline to the Compendium Manager software
 ##############
-onstart:
-    shell('touch running.txt')
-onsuccess:
-    shell('rm running.txt')
-    shell(f"sbatch --job-name=forward -o logs/{int(round(datetime.now().timestamp()))}.log --chdir={config['cmanager_path']} run_autoforward.slurm")
-onerror:
-    shell('rm running.txt')
-########
 
 with open('SraAccList.txt', 'r') as file:
     samples = file.read().splitlines()
@@ -22,35 +14,6 @@ shell.executable("/bin/sh") # sra-tools container doesn't have bash
 rule all:
     input:
         'summary.tsv', 'ASV.tsv', 'ASVs.fa', 'ASVs_counts.tsv'
-
-rule sra_prefetch:
-    input:
-        'SraAccList.txt'
-    output:
-        '{sample}/{sample}.sra'
-    threads: 6
-    retries: 1
-    resources:
-        mem_mb=500,
-        runtime=180
-    shell:
-        f"singularity exec --bind /scratch/midway3/rabdill/ {config['resources_path']}sra-tools_3.0.1.sif prefetch --max-size 1t --option-file SraAccList.txt"
-
-rule sra_to_fastq:
-    input:
-        '{sample}/{sample}.sra'
-    output:
-        expand('fastq/{sample}.fastq', sample=samples)
-    threads: 4
-    resources:
-        mem_mb=2000,
-        runtime=480
-    shell:
-        """
-        singularity exec --bind /scratch/midway3/rabdill/ {config[resources_path]}sra-tools_3.0.1.sif fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample} &&
-            [ ! -f fastq/{wildcards.sample}_1.fastq ] || mv fastq/{wildcards.sample}_1.fastq fastq/{wildcards.sample}.fastq
-        """
-
 # This function requests more memory for the "filter" rule based on how many times
 # it has already failed.
 def get_mem_mb_filter(wildcards, attempt):
@@ -59,7 +22,7 @@ def get_mem_mb_filter(wildcards, attempt):
 
 rule filter:
     input:
-        expand('fastq/{sample}.fastq', sample=samples)
+        expand('fastq/{sample}_R1.fastq.gz', sample=samples)
     output:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
         'filtered_out.rds'
