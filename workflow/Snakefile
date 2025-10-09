@@ -27,27 +27,27 @@ rule sra_prefetch:
     input:
         'SraAccList.txt'
     output:
-        temp(expand('{sample}/{sample}.sra',sample=samples))
-    threads: 1
+        '{sample}/{sample}.sra'
+    threads: 6
     retries: 1
     resources:
         mem_mb=500,
         runtime=180
     shell:
-        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}sra-tools_3.0.1.sif prefetch --max-size 1t --option-file SraAccList.txt"
+        f"singularity exec --bind /scratch/midway3/rabdill/ {config['resources_path']}sra-tools_3.0.1.sif prefetch --max-size 1t --option-file SraAccList.txt"
 
 rule sra_to_fastq:
     input:
         '{sample}/{sample}.sra'
     output:
-        'fastq/{sample}.fastq'
+        expand('fastq/{sample}.fastq', sample=samples)
     threads: 4
     resources:
         mem_mb=2000,
         runtime=480
     shell:
         """
-        singularity exec --bind {config[cmanager_path]} {config[resources_path]}sra-tools_3.0.1.sif fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample} &&
+        singularity exec --bind /scratch/midway3/rabdill/ {config[resources_path]}sra-tools_3.0.1.sif fasterq-dump --skip-technical --mem 1GB --threads 4 --split-files -O fastq/ {wildcards.sample} &&
             [ ! -f fastq/{wildcards.sample}_1.fastq ] || mv fastq/{wildcards.sample}_1.fastq fastq/{wildcards.sample}.fastq
         """
 
@@ -58,7 +58,6 @@ def get_mem_mb_filter(wildcards, attempt):
     return tiers[attempt-1] * 1000
 
 rule filter:
-    retries: 3
     input:
         expand('fastq/{sample}.fastq', sample=samples)
     output:
@@ -70,7 +69,7 @@ rule filter:
         mem_mb=get_mem_mb_filter,
         runtime=1440
     shell:
-        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}dada2_1260a.sif Rscript scripts/filter.R"
+        f"singularity exec --bind /scratch/midway3/rabdill/ /project/blekhman/rabdill/containers/dada2_1260a.sif Rscript scripts/filter.R"
 
 def get_mem_mb_errormodel(wildcards, attempt):
     tiers = [16, 32, 64, 96]
@@ -91,7 +90,7 @@ rule errormodel:
         mem_mb=get_mem_mb_errormodel,
         runtime=1440
     shell:
-        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}dada2_1260a.sif Rscript scripts/error_models.R"
+        f"singularity exec --bind /scratch/midway3/rabdill/ {config['resources_path']}dada2_1260a.sif Rscript scripts/error_models.R"
 
 def get_mem_mb_dada(wildcards, attempt):
     if len(samples) < 50:
@@ -120,4 +119,4 @@ rule make_asv_table:
         mem_mb=get_mem_mb_dada,
         runtime=get_runtime_dada
     shell:
-        f"singularity exec --bind {config['cmanager_path']} {config['resources_path']}dada2_1260a.sif Rscript scripts/generate_asvs.R"
+        f"singularity exec --bind /scratch/midway3/rabdill/ {config['resources_path']}dada2_1260a.sif Rscript scripts/generate_asvs.R"

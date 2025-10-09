@@ -43,13 +43,13 @@ if(paired) {
     # TODO: We may be able to fix the "Not all provided files exist" problem
     # using this here: https://github.com/benjjneb/dada2/issues/711
     for(sam in samples) {
-    cat("Processing:", sam, "\n")
-    derepF <- derepFastq(paste("intermediate/", sam, ".R1.filtered.fastq.gz", sep=""))
-    ddF[[sam]] <- dada(derepF, err=err_forward_reads, multithread=TRUE)
-    derepR <- derepFastq(paste("intermediate/", sam, ".R2.filtered.fastq.gz", sep=""))
-    ddR[[sam]] <- dada(derepR, err=err_reverse_reads, multithread=TRUE)
-    merger <- mergePairs(ddF[[sam]], derepF, ddR[[sam]], derepR)
-    mergers[[sam]] <- merger
+        cat("Processing:", sam, "\n")
+        derepF <- derepFastq(paste("intermediate/", sam, ".R1.filtered.fastq.gz", sep=""))
+        ddF[[sam]] <- dada(derepF, err=err_forward_reads, multithread=TRUE)
+        derepR <- derepFastq(paste("intermediate/", sam, ".R2.filtered.fastq.gz", sep=""))
+        ddR[[sam]] <- dada(derepR, err=err_reverse_reads, multithread=TRUE)
+        merger <- mergePairs(ddF[[sam]], derepF, ddR[[sam]], derepR)
+        mergers[[sam]] <- merger
     }
     rm(derepF); rm(derepR)
 
