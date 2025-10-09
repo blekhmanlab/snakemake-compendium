@@ -11,6 +11,18 @@ forward_reads <- paste0("fastq/", samples, ".fastq")
 # and one with the reverse
 reverse_reads <- paste0("fastq/", samples, "_2.fastq")
 
+# Accommodating projects with samples that couldn't be downloaded
+
+samples <- samples[file.exists(forward_reads) & file.exists(reverse_reads)] # fix the sample list BEFORE fixing the file list
+
+forward_reads <- forward_reads[file.exists(forward_reads)]
+reverse_reads <- reverse_reads[file.exists(reverse_reads)]
+
+print(samples)
+print(length(samples))
+print(length(forward_reads))
+print(length(reverse_reads))
+print('---------\n\n\n')
 # and variables holding file names for the forward and reverse
 # filtered reads we're going to generate below
 filtered_forward_reads <- paste0("intermediate/", samples, ".R1.filtered.fastq.gz")

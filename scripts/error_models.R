@@ -10,7 +10,10 @@ filtered_forward_reads <- paste0("intermediate/", samples, ".R1.filtered.fastq.g
 filtered_reverse_reads <- paste0("intermediate/", samples, ".R2.filtered.fastq.gz")
 
 # This determines whether we should use paired-end processing or single-end
-paired <- sum(file.exists(reverse_reads)) == length(reverse_reads)
+filtered_forward_reads <- filtered_forward_reads[file.exists(filtered_forward_reads)]
+filtered_reverse_reads <- filtered_reverse_reads[file.exists(filtered_reverse_reads)]
+paired <- length(filtered_forward_reads) == length(filtered_reverse_reads)
+
 if(paired) {
     log('Paired-end data found!')
 } else {
