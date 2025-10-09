@@ -64,7 +64,7 @@ rule filter:
         expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
         'filtered_out.rds'
     threads: 8
-    retries: 1
+    retries: 0
     resources:
         mem_mb=get_mem_mb_filter,
         runtime=1440
@@ -85,7 +85,7 @@ rule errormodel:
         'err_forward_reads.rds',
         'forward_error_model.pdf'
     threads: 8
-    retries: 1
+    retries: 0
     resources:
         mem_mb=get_mem_mb_errormodel,
         runtime=1440
@@ -114,7 +114,7 @@ rule make_asv_table:
     output:
         'summary.tsv', 'ASV.tsv', 'ASVs.fa', 'ASVs_counts.tsv'
     threads: 8
-    retries: 3
+    retries: 0
     resources:
         mem_mb=get_mem_mb_dada,
         runtime=get_runtime_dada
