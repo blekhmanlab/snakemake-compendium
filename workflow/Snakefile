@@ -14,9 +14,6 @@ onerror:
     shell('rm running.txt')
 ########
 
-with open('SraAccList.txt', 'r') as file:
-    samples = file.read().splitlines()
-
 shell.executable("/bin/sh") # sra-tools container doesn't have bash
 
 rule all:
@@ -25,7 +22,7 @@ rule all:
 
 rule sra_prefetch:
     input:
-        'SraAccList.txt'
+        'SraAccList.original.txt'
     output:
         '{sample}/{sample}.sra'
     threads: 6
@@ -34,10 +31,29 @@ rule sra_prefetch:
         mem_mb=500,
         runtime=180
     shell:
-        f"singularity exec --bind /scratch/midway3/rabdill/ {config['resources_path']}sra-tools_3.0.1.sif prefetch --max-size 1t --option-file SraAccList.txt"
+        f"singularity exec --bind /scratch/midway3/rabdill/ {config['resources_path']}sra-tools_3.0.1.sif prefetch --max-size 1t --option-file SraAccList.original.txt"
+
+rule rewrite_acclist:
+    input:
+        '{sample}/{sample}.sra'
+    output:
+        'SraAccList.txt'
+    threads: 1
+    resources:
+        mem_mb=2000,
+        runtime=480
+    run:
+        import os
+        new = [sample for sample in os.listdir() if os.path.exists(f'{sample}/{sample}.sra')]
+        with open('SraAccList.txt','w') as outfile:
+            outfile.write('\n'.join(new))
+
+with open('SraAccList.txt', 'r') as file:
+    samples = file.read().splitlines()
 
 rule sra_to_fastq:
     input:
+        'SraAccList.txt',
         expand('{sample}/{sample}.sra', sample=samples)
     output:
         'fastq/{sample}.fastq'
