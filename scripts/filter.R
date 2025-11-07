@@ -13,7 +13,7 @@ reverse_reads <- paste0("fastq/", samples, "_2.fastq")
 
 # Accommodating projects with samples that couldn't be downloaded
 
-samples <- samples[file.exists(forward_reads) & file.exists(reverse_reads)] # fix the sample list BEFORE fixing the file list
+samples <- samples[file.exists(forward_reads)]
 
 forward_reads <- forward_reads[file.exists(forward_reads)]
 reverse_reads <- reverse_reads[file.exists(reverse_reads)]
@@ -29,7 +29,7 @@ filtered_forward_reads <- paste0("intermediate/", samples, ".R1.filtered.fastq.g
 filtered_reverse_reads <- paste0("intermediate/", samples, ".R2.filtered.fastq.gz")
 
 # This determines whether we should use paired-end processing or single-end
-paired <- sum(file.exists(reverse_reads)) == length(reverse_reads)
+paired <- sum(file.exists(reverse_reads)) == length(forward_reads)
 if(paired) {
     log('Paired-end data found!')
 } else {

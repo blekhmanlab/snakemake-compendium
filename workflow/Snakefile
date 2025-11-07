@@ -38,9 +38,9 @@ rule sra_prefetch:
 
 rule sra_to_fastq:
     input:
-        '{sample}/{sample}.sra'
+        expand('{sample}/{sample}.sra', sample=samples)
     output:
-        expand('fastq/{sample}.fastq', sample=samples)
+        'fastq/{sample}.fastq'
     threads: 4
     resources:
         mem_mb=2000,

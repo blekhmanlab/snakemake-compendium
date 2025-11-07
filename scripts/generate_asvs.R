@@ -1,4 +1,3 @@
-library(dada2)
 
 ##########################
 # Setup carried over from previous step
@@ -20,7 +19,7 @@ if(paired) {
     log('Processing as single-end data')
 }
 
-samples <- gsub('intermediate/(\\w+)\\.R1.filtered.fastq.gz$', '\\1', filtered_forward_reads)
+samples <- gsub('intermediate/(.+)\\.R1.filtered.fastq.gz$', '\\1', filtered_forward_reads)
 ###########################
 
 # load error models from previous step
@@ -33,6 +32,8 @@ if(paired) {
 #########################
 # Generate count table
 #########################
+library(dada2)
+
 if(paired) {
     mergers <- vector("list", length(samples))
     names(mergers) <- samples
