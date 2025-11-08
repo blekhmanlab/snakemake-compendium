@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 
 configfile: "config/config.yaml"
 
@@ -13,6 +14,15 @@ onsuccess:
 onerror:
     shell('rm running.txt')
 ########
+
+def getsamples():
+    toget = 'SraAccList.original.txt'
+    if os.path.exists('SraAccList.txt'):
+        toget = 'SraAccList.txt'
+        print("\n\n\nNEW!!!!!!!!--------------------------")
+    with open(toget, 'r') as file:
+        tosend = file.read().splitlines()
+    return tosend
 
 shell.executable("/bin/sh") # sra-tools container doesn't have bash
 
@@ -33,9 +43,9 @@ rule sra_prefetch:
     shell:
         f"singularity exec --bind /scratch/midway3/rabdill/ {config['resources_path']}sra-tools_3.0.1.sif prefetch --max-size 1t --option-file SraAccList.original.txt"
 
-rule rewrite_acclist:
+checkpoint rewrite_acclist:
     input:
-        '{sample}/{sample}.sra'
+        expand('{sample}/{sample}.sra', sample=getsamples())
     output:
         'SraAccList.txt'
     threads: 1
@@ -48,13 +58,10 @@ rule rewrite_acclist:
         with open('SraAccList.txt','w') as outfile:
             outfile.write('\n'.join(new))
 
-with open('SraAccList.txt', 'r') as file:
-    samples = file.read().splitlines()
-
 rule sra_to_fastq:
     input:
         'SraAccList.txt',
-        expand('{sample}/{sample}.sra', sample=samples)
+        expand('{sample}/{sample}.sra', sample=getsamples())
     output:
         'fastq/{sample}.fastq'
     threads: 4
@@ -75,9 +82,9 @@ def get_mem_mb_filter(wildcards, attempt):
 
 rule filter:
     input:
-        expand('fastq/{sample}.fastq', sample=samples)
+        expand('fastq/{sample}.fastq', sample=getsamples())
     output:
-        expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
+        expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=getsamples()),
         'filtered_out.rds'
     threads: 8
     retries: 0
@@ -95,7 +102,7 @@ def get_mem_mb_errormodel(wildcards, attempt):
 # complicated to tell Snakemake to conditionally require the reverse model
 rule errormodel:
     input:
-        expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
+        expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=getsamples()),
         'filtered_out.rds'
     output:
         'err_forward_reads.rds',
@@ -125,7 +132,7 @@ def get_runtime_dada(wildcards, attempt):
 
 rule make_asv_table:
     input:
-        expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=samples),
+        expand('intermediate/{sample}.R1.filtered.fastq.gz', sample=getsamples()),
         'err_forward_reads.rds'
     output:
         'summary.tsv', 'ASV.tsv', 'ASVs.fa', 'ASVs_counts.tsv'
